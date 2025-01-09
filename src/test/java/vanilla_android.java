@@ -1,91 +1,59 @@
 import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.MobileBy;
-import io.appium.java_client.MobileElement;
+import io.appium.java_client.android.AndroidDriver;
+import io.github.ashwith.flutter.FlutterFinder;
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
-import java.net.MalformedURLException;
+import org.testng.Assert;
+
 import java.net.URL;
 
-public class vanilla_android {
-    public static String userName = System.getenv("LT_USERNAME") == null ? "YOUR_USERNAME" // Add username here
-            : System.getenv("LT_USERNAME");
-    public static String accessKey = System.getenv("LT_ACCESS_KEY") == null ? "YOUR_ACCESS_KEY" // Add accessKey here
-            : System.getenv("LT_ACCESS_KEY");
+class vanilla_android {
+  
+  private static AppiumDriver driver;
 
-    private static AppiumDriver driver;
+  public static void main(String[] args) {
+    try {
+      // DesiredCapabilities for LambdaTest setup
+      DesiredCapabilities capabilities = new DesiredCapabilities();
+      capabilities.setCapability("deviceName", ".*"); // Use a regex pattern to match any device name
+      capabilities.setCapability("platformVersion", "13"); // Platform version of Android device
+      capabilities.setCapability("automationName", "flutter"); // Set automation name as Flutter
+      capabilities.setCapability("platformName", "android");
+      capabilities.setCapability("isRealMobile", true); // Real device testing
+      //            capabilities.setCapability("app", "lt://APP10160301221736351094568553"); // App URL on LambdaTest
+      capabilities.setCapability("app", "flutterapk"); // App URL on LambdaTest
+      capabilities.setCapability("appiumVersion", "2.2.1"); // Version of Appium
+      capabilities.setCapability("video", true); // Enable video recording
+      capabilities.setCapability("visual", true); // Enable visual logs
+      capabilities.setCapability("w3c", false); // Disable W3C compliance for better compatibility
+      capabilities.setCapability("autoAcceptAlerts", true); // Enable app profiling
+      capabilities.setCapability("autoGrantPermissions", true); // Enable app profiling
 
-    public static void main(String args[]) throws MalformedURLException, InterruptedException {
+      // Initialize the Appium driver to connect with LambdaTest
+      AndroidDriver driver = new AndroidDriver(
+        new URL("https://username:accesskey@mobile-hub.lambdatest.com/wd/hub"),
+        //      new URL(
+        //        "https://mobileQA:aMu9eQwRwWSCLnSsbALDYdGcSj7tuaDkTmDXSCDlYjyDiWWpsb@stage-mobile-hub.lambdatestinternal.com/wd/hub"),
+        capabilities);
 
-        try {
-            DesiredCapabilities capabilities = new DesiredCapabilities();
-            capabilities.setCapability("deviceName", "Galaxy S20");
-            capabilities.setCapability("platformVersion", "11");
-            capabilities.setCapability("platformName", "Android");
-            capabilities.setCapability("isRealMobile", true);
-            capabilities.setCapability("app", "APP_URL"); // Enter your app url
-            capabilities.setCapability("deviceOrientation", "PORTRAIT");
-            capabilities.setCapability("build", "Java Vanilla - Android");
-            capabilities.setCapability("name", "Sample Test Java");
-            capabilities.setCapability("console", true);
-            capabilities.setCapability("network", false);
-            capabilities.setCapability("visual", true);
-            capabilities.setCapability("devicelog", true);
+      driver.context("FLUTTER");
 
-            driver = new AppiumDriver(
-                    new URL("https://" + userName + ":" + accessKey + "@mobile-hub.lambdatest.com/wd/hub"),
-                    capabilities);
-
-            MobileElement color = (MobileElement) driver.findElement(MobileBy.id("com.lambdatest.proverbial:id/color"));
-            color.click();
-
-            MobileElement text = (MobileElement) driver.findElement(MobileBy.id("com.lambdatest.proverbial:id/Text"));
-            // Changes the text to proverbial
-            text.click();
-
-            // toast is visible
-            MobileElement toast = (MobileElement) driver.findElement(MobileBy.id("com.lambdatest.proverbial:id/toast"));
-            toast.click();
-
-            // notification is visible
-            MobileElement notification = (MobileElement) driver
-                    .findElement(MobileBy.id("com.lambdatest.proverbial:id/notification"));
-            notification.click();
-
-            // Open the geolocation page
-            MobileElement geo = (MobileElement) driver
-                    .findElement(MobileBy.id("com.lambdatest.proverbial:id/geoLocation"));
-            geo.click();
-            Thread.sleep(5000);
-
-            // takes back to home page
-            MobileElement el3 = (MobileElement) driver.findElementByAccessibilityId("Home");
-
-            driver.navigate().back();
-            Thread.sleep(2000);
-
-            // Takes to speed test page
-            MobileElement speedtest = (MobileElement) driver
-                    .findElement(MobileBy.id("com.lambdatest.proverbial:id/speedTest"));
-            speedtest.click();
-            Thread.sleep(5000);
-
-            driver.navigate().back();
-
-            // Opens the browser
-            MobileElement browser = (MobileElement) driver.findElement(MobileBy.AccessibilityId("Browser"));
-            browser.click();
-
-            MobileElement url = (MobileElement) driver.findElement(MobileBy.id("com.lambdatest.proverbial:id/url"));
-            url.sendKeys("https://www.lambdatest.com");
-            MobileElement find = (MobileElement) driver.findElement(MobileBy.id("com.lambdatest.proverbial:id/find"));
-            find.click();
-
-        } catch (AssertionError a) {
-            ((JavascriptExecutor) driver).executeScript("lambda-status=failed");
-            a.printStackTrace();
-        }
-        // The driver.quit statement is required, otherwise the test continues to
-        // execute, leading to a timeout.
-        driver.quit();
+      FlutterFinder finder = new FlutterFinder(driver);
+      finder.byValueKey("next_route_key").click();
+      driver.context("NATIVE_APP");
+      WebElement ele = driver.findElement(By.xpath("/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.view.View/android.view.View/android.view.View/android.view.View/android.view.View[2]"));
+      String text = ele.getText();
+      Boolean checkText = text.equalsIgnoreCase("This is 2nd route");
+      Assert.assertTrue(checkText, "Text not displayed as expected");// Replace with the actual ValueKey of the button
+      driver.quit();
+    } catch (Exception e) {
+      if (driver != null) {
+        ((JavascriptExecutor) driver).executeScript("lambda-status=failed");
+      }
+      e.printStackTrace();
     }
+  }
+
 }
